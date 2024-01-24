@@ -48,8 +48,8 @@ class AuthController extends AbstractController
         $entityManager->flush();
 
         $context = SerializationContext::create();
-        $jsonMonstredex = $serializer->serialize($userEntry, 'json', $context);
+        $jsonUser = $serializer->serialize($userEntry, 'json', $context);
 
-        return new JsonResponse($jsonMonstredex, Response::HTTP_CREATED, [], true);
+        return new JsonResponse($jsonUser, Response::HTTP_CREATED, [], true);
     }
 }
