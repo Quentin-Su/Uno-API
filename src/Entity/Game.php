@@ -6,6 +6,7 @@ use App\Repository\GameRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
 class Game
@@ -13,18 +14,19 @@ class Game
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['createGame', 'joinGame'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
-
-    #[ORM\Column(length: 255)]
+    #[Groups(['createGame'])]
     private ?string $code = null;
 
     #[ORM\ManyToOne(inversedBy: 'games')]
+    #[Groups(['createGame', 'joinGame'])]
     private ?User $creator_id = null;
 
     #[ORM\Column]
+    #[Groups(['createGame'])]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column(nullable: true)]
@@ -36,6 +38,9 @@ class Game
     #[ORM\OneToMany(mappedBy: 'game_id', targetEntity: UserGame::class)]
     private Collection $userGames;
 
+    #[ORM\Column(length: 255)]
+    private ?string $status = null;
+
     public function __construct()
     {
         $this->userGames = new ArrayCollection();
@@ -44,18 +49,6 @@ class Game
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): static
-    {
-        $this->name = $name;
-
-        return $this;
     }
 
     public function getCode(): ?string
@@ -154,6 +147,18 @@ class Game
                 $userGame->setGameId(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }
