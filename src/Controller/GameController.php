@@ -26,7 +26,7 @@ class GameController extends AbstractController
     private $currentUser;
 
     /**
-     * @var Game|false $currentGame
+     * @var Game|null $currentGame
      */
     private $currentGame;
 
@@ -35,11 +35,24 @@ class GameController extends AbstractController
      */
     private $currentUserGame;
 
-    public function __construct(TokenStorageInterface $tokenStorage)
+    public function __construct(TokenStorageInterface $tokenStorage, EntityManagerInterface $entityManager)
     {
         $this->currentUser = $tokenStorage->getToken()->getUser();
-        $this->currentGame = $this->currentUser->getGames()->filter(fn ($game) => !in_array($game->getStatus(), ['quit', 'end']))->first();
-        $this->currentUserGame = $this->currentGame->getUserGames()->filter(fn ($elem) => $elem->getUserId()->getId() === $this->currentUser->getId())->first();
+        $this->currentGame = $entityManager->createQueryBuilder()
+            ->select('g')
+            ->from('App\Entity\Game', 'g')
+            ->join('App\Entity\UserGame', 'ug', 'WITH', 'g.id = ug.game_id')
+            ->where('g.status NOT IN (:statuses)')
+            ->andWhere('ug.user_id = :userId')
+            ->andWhere('ug.status = :userGameStatus')
+            ->setParameters([
+                'statuses' => ['end', 'quit'],
+                'userId' => $this->currentUser->getId(),
+                'userGameStatus' => 'on',
+            ])
+            ->getQuery()
+            ->getOneOrNullResult();
+        $this->currentUserGame = $this->currentGame ? $this->currentGame->getUserGames()->filter(fn ($userGame) => $userGame->getUserId()->getId() === $this->currentUser->getId())->first() : null;
     }
 
     #[Route('api/game', name: 'app_game.createGame', methods: ['POST'])]
@@ -47,8 +60,8 @@ class GameController extends AbstractController
     #[Security(name: 'Bearer')]
     public function createGame(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
-        if ($this->currentGame) return new JsonResponse(['message' => 'You cannot create a new game while you are already in an existing game.'], JsonResponse::HTTP_FORBIDDEN , []);
-        
+        if ($this->currentGame) return new JsonResponse(['message' => 'You cannot create a new game while you are already in an existing game.'], JsonResponse::HTTP_FORBIDDEN, []);
+
         $game = new Game();
         $userGame = new UserGame();
 
@@ -78,7 +91,7 @@ class GameController extends AbstractController
     #[Security(name: 'Bearer')]
     public function joinGame(string $code, GameRepository $repository, EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
-        if ($this->currentGame) return new JsonResponse(['message' => 'You cannot join a new game while you are already in an existing game.'], JsonResponse::HTTP_FORBIDDEN , []);
+        if ($this->currentGame) return new JsonResponse(['message' => 'You cannot join a new game while you are already in an existing game.'], JsonResponse::HTTP_FORBIDDEN, []);
 
         $game = $repository->findOneBy(['code' => $code, 'status' => 'waiting']);
 
@@ -100,12 +113,10 @@ class GameController extends AbstractController
 
                 $context = SerializationContext::create()->setGroups(['joinGame']);
                 $jsonGame = $serializer->serialize($game, 'json', $context);
-        
+
                 return new JsonResponse($jsonGame, Response::HTTP_CREATED, [], true);
-            }
-            else return new JsonResponse(['message' => 'You are already in this game.'], JsonResponse::HTTP_NOT_MODIFIED , []);
-        }
-        else return new JsonResponse(['message' => 'No game found with this code.'], JsonResponse::HTTP_NOT_MODIFIED , []);
+            } else return new JsonResponse(['message' => 'You are already in this game.'], JsonResponse::HTTP_NOT_MODIFIED, []);
+        } else return new JsonResponse(['message' => 'No game found with this code.'], JsonResponse::HTTP_NOT_FOUND, []);
     }
 
     #[Route('api/game/start', name: 'app_game.startGame', methods: ['POST'])]
@@ -123,7 +134,7 @@ class GameController extends AbstractController
             return new JsonResponse(null, Response::HTTP_NO_CONTENT, []);
         };
 
-        return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED, []);
+        return new JsonResponse(['message' => 'Unauthorized, you are not the owner of this game.'], Response::HTTP_UNAUTHORIZED, []);
     }
 
     #[Route('api/game/leave', name: 'app_game.leaveGame', methods: ['POST'])]
@@ -131,25 +142,23 @@ class GameController extends AbstractController
     #[Security(name: 'Bearer')]
     public function leaveGame(EntityManagerInterface $entityManager): JsonResponse
     {
-        dd($this->currentGame);
+        if (!$this->currentGame) return new JsonResponse(['message' => 'You cannot leave a game you are not currently present in.'], JsonResponse::HTTP_NOT_MODIFIED, []);
 
-        // if (!$this->currentGame) return new JsonResponse(['message' => 'You cannot leave a game you are not currently present in.'], JsonResponse::HTTP_NOT_MODIFIED , []);
+        if ($this->currentGame->getCreatorId()->getId() === $this->currentUser->getId()) {
+            foreach ($this->currentGame->getUserGames() as $key => $value) {
+                $value->setStatus('quit');
+                $entityManager->persist($value);
+            };
 
-        // if ($this->currentGame->getCreatorId()->getId() === $this->currentUser->getId()) {
-        //     foreach ($this->currentGame->getUserGames() as $key => $value) {
-        //         $value->setStatus('quit');
-        //         $entityManager->persist($value);
-        //     };
+            $this->currentGame->setStatus('stop');
+            $this->currentGame->setUpdateAt(new DateTimeImmutable());
+            $entityManager->persist($this->currentGame);
+        } else {
+            $this->currentUserGame->setStatus('quit');
+            $entityManager->persist($this->currentUserGame);
+        };
+        $entityManager->flush();
 
-        //     $this->currentGame->setStatus('stop');
-        //     $entityManager->persist($this->currentGame);
-        // }
-        // else {
-        //     $this->currentUserGame->setStatus('quit');
-        //     $entityManager->persist($this->currentUserGame);
-        // };
-        // $entityManager->flush();
-
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT, []);
+        return new JsonResponse(null, Response::HTTP_ACCEPTED, []);
     }
 }
