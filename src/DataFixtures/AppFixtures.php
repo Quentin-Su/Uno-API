@@ -37,6 +37,8 @@ class AppFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
+        // Generating Admin user
+
         $adminUser = new User();
         $adminUser->setUsername('admin');
         $adminUser->setRoles(['ROLE_ADMIN']);
@@ -45,18 +47,50 @@ class AppFixtures extends Fixture
         $adminUser->setStatus('on');
         $manager->persist($adminUser);
 
-        for ($i = 0; $i < 10; $i++) { 
-            $CardEntry = new Card();
-            $CardEntry->setColor('red');
-            $CardEntry->setNumber($this->faker->randomDigitNotNull());
-            $CardEntry->setType('number');
-            $CardEntry->setIsSpecial(false);
-            $CardEntry->setIsWild(false);
-            $CardEntry->setImage(null);
-            $CardEntries[] = $CardEntry;
-            $manager-> persist($CardEntry);
-        }
+
+        // Generating Cards
+
+        $colors = ['red', 'blue', 'green', 'yellow'];
+        $specialTypes = ['skip', 'reverse', 'draw_two'];
+        $specialTypesWild = ['draw_four', 'change_color'];
+
+        foreach ($colors as $color) {
+            $this->createCard($manager, $color, 0, 'number', false, false, null); // Adding the 0 card once
+
+            $iterations = array_fill(1, 9, 2); // 2 iterations for numbers 1 to 9
+
+            foreach ($iterations as $number => $count) {
+                for ($i = 0; $i < $count; $i++) {
+                    $this->createCard($manager, $color, $number, 'number', false, false, null);
+                };
+            };
+
+            foreach ($specialTypes as $type) {
+                for ($i = 0; $i < 2; $i++) {
+                    $this->createCard($manager, $color, null, $type, true, false, null);
+                };
+            };
+        };
+
+        foreach ($specialTypesWild as $type) {
+            for ($i = 0; $i < 4; $i++) { 
+                $this->createCard($manager, null, null, $type, true, true, null);
+            };
+        };
 
         $manager->flush();
+    }
+
+    private function createCard(ObjectManager $manager, $color, $number, $type, $isSpecial, $isWild, $image)
+    {
+        $card = new Card();
+        $card->setColor($color);
+        $card->setNumber($number);
+        $card->setType($type);
+        $card->setIsSpecial($isSpecial);
+        $card->setIsWild($isWild);
+        $card->setImage($image);
+
+        $manager->persist($card);
     }
 }
