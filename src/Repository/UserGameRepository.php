@@ -21,28 +21,38 @@ class UserGameRepository extends ServiceEntityRepository
         parent::__construct($registry, UserGame::class);
     }
 
-//    /**
-//     * @return UserGame[] Returns an array of UserGame objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('u.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+    * @return UserGame|null Returns the targeted UserGame
+    */
+    public function getUserInUserGame($gameId, $userId): ?UserGame
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.game_id = :gameId')
+            ->andWhere('u.user_id = :userId')
+            ->setParameters([
+                'gameId' => $gameId,
+                'userId' => $userId
+            ])
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 
-//    public function findOneBySomeField($value): ?UserGame
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /**
+    * @return UserGame[]|[] Returns an array of UserGame objects
+    */
+    public function getUsersGame($gameId): array
+    {
+        return $this->createQueryBuilder('u')
+            ->getQuery()
+            ->getResult();
+        // return $this->createQueryBuilder('u')
+        //     ->where('u.gameId = :gameId')
+        //     ->andWhere('u.status = :status')
+        //     ->setParameters([
+        //         'gameId' => $gameId,
+        //         'status' => 'on'
+        //     ])
+        //     ->getQuery()
+        //     ->getResult();
+    }
 }
