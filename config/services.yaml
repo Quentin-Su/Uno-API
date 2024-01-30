@@ -23,6 +23,13 @@ services:
     App\Command\WebSocketCommand:
         tags:
             - { name: 'console.command' }
+        arguments:
+            $container: '@service_container'
+
+    app.websocket_manager:
+        class: App\WebSocket\WebSocketManager
+        shared: true
+        public: true
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

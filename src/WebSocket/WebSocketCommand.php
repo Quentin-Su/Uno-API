@@ -2,43 +2,40 @@
 
 namespace App\Command;
 
-use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
-use App\WebSocket\WebSocketServer;
-use Doctrine\ORM\EntityManagerInterface;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use App\WebSocket\WebSocketServer;
+use Ratchet\Server\IoServer;
 
 class WebSocketCommand extends Command
 {
-    /**
-     * @var JWTTokenManagerInterface $jwtManager
-     */
-    private $jwtManager;
+    private $container;
 
-    /**
-     * @var EntityManagerInterface $entityManager
-     */
-    private $entityManager;
-
-    public function __construct(JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager)
+    public function __construct(ContainerInterface $container)
     {
         parent::__construct();
-        $this->jwtManager = $jwtManager;
-        $this->entityManager = $entityManager;
+        $this->container = $container;
     }
 
-    protected static $defaultName = 'websocket:start';
+    protected function configure()
+    {
+        $this
+            ->setName('websocket:start')
+            ->setDescription('Starts the WebSocket server');
+    }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $webSocketManager = $this->container->get('app.websocket_manager');
+
         $server = IoServer::factory(
             new HttpServer(
                 new WsServer(
-                    new WebSocketServer($this->jwtManager, $this->entityManager)
+                    new WebSocketServer($webSocketManager)
                 )
             ),
             8080
@@ -46,5 +43,7 @@ class WebSocketCommand extends Command
 
         $output->writeln('WebSocket server started on port 8080');
         $server->run();
+
+        return Command::SUCCESS;
     }
 }
