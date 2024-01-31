@@ -43,16 +43,13 @@ class UserGameRepository extends ServiceEntityRepository
     public function getUsersGame($gameId): array
     {
         return $this->createQueryBuilder('u')
+            ->where('u.game_id = :gameId')
+            ->andWhere('u.status = :status')
+            ->setParameters([
+                'gameId' => $gameId,
+                'status' => 'on'
+            ])
             ->getQuery()
             ->getResult();
-        // return $this->createQueryBuilder('u')
-        //     ->where('u.gameId = :gameId')
-        //     ->andWhere('u.status = :status')
-        //     ->setParameters([
-        //         'gameId' => $gameId,
-        //         'status' => 'on'
-        //     ])
-        //     ->getQuery()
-        //     ->getResult();
     }
 }
