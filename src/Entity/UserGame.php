@@ -6,6 +6,7 @@ use App\Repository\UserGameRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserGameRepository::class)]
 class UserGame
@@ -13,12 +14,15 @@ class UserGame
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['getUserStuff'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'userGames')]
+    #[Groups(['getUserStuff'])]
     private ?User $user_id = null;
 
     #[ORM\ManyToOne(inversedBy: 'userGames')]
+    #[Groups(['getUserStuff'])]
     private ?Game $game_id = null;
 
     #[ORM\Column]
@@ -27,10 +31,8 @@ class UserGame
     #[ORM\Column(length: 255)]
     private ?string $status = null;
 
-    #[ORM\OneToOne(mappedBy: 'user_game_id', cascade: ['persist', 'remove'])]
-    private ?UserGameStats $userGameStats = null;
-
     #[ORM\OneToMany(mappedBy: 'user_game_id', targetEntity: UserCard::class)]
+    #[Groups(['getUserStuff'])]
     private Collection $userCards;
 
     public function __construct()
@@ -87,28 +89,6 @@ class UserGame
     public function setStatus(string $status): static
     {
         $this->status = $status;
-
-        return $this;
-    }
-
-    public function getUserGameStats(): ?UserGameStats
-    {
-        return $this->userGameStats;
-    }
-
-    public function setUserGameStats(?UserGameStats $userGameStats): static
-    {
-        // unset the owning side of the relation if necessary
-        if ($userGameStats === null && $this->userGameStats !== null) {
-            $this->userGameStats->setUserGameId(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($userGameStats !== null && $userGameStats->getUserGameId() !== $this) {
-            $userGameStats->setUserGameId($this);
-        }
-
-        $this->userGameStats = $userGameStats;
 
         return $this;
     }

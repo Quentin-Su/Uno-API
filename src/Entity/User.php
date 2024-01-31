@@ -17,11 +17,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['createGame', 'joinGame'])]
+    #[Groups(['createGame', 'joinGame', 'getUserStuff'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
-    #[Groups(['userRegister', 'getUserProfile', 'createGame', 'joinGame'])]
+    #[Groups(['userRegister', 'getUserProfile', 'createGame', 'joinGame', 'getUserStuff'])]
     #[Assert\NotBlank(message: 'Name is required')]
     #[Assert\Length(min: 2, minMessage: 'A Name must be at least {{ limit }} characters long')]
     private ?string $username = null;

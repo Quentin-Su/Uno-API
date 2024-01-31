@@ -12,27 +12,27 @@ class Card
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getAllCard'])]
+    #[Groups(['getAllCard', 'getUserStuff'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['getAllCard'])]
+    #[Groups(['getAllCard', 'getUserStuff'])]
     private ?string $color = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['getAllCard'])]
+    #[Groups(['getAllCard', 'getUserStuff'])]
     private ?int $number = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getAllCard'])]
+    #[Groups(['getAllCard', 'getUserStuff'])]
     private ?string $type = null;
 
     #[ORM\Column]
-    #[Groups(['getAllCard'])]
+    #[Groups(['getAllCard', 'getUserStuff'])]
     private ?bool $is_special = null;
 
     #[ORM\Column]
-    #[Groups(['getAllCard'])]
+    #[Groups(['getAllCard', 'getUserStuff'])]
     private ?bool $is_wild = null;
 
     #[ORM\ManyToOne(inversedBy: 'cards')]

@@ -14,7 +14,7 @@ class Game
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['createGame', 'joinGame'])]
+    #[Groups(['createGame', 'joinGame', 'getUserStuff'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
@@ -22,7 +22,7 @@ class Game
     private ?string $code = null;
 
     #[ORM\ManyToOne(inversedBy: 'games')]
-    #[Groups(['createGame', 'joinGame'])]
+    #[Groups(['createGame', 'joinGame', 'getUserStuff'])]
     private ?User $creator_id = null;
 
     #[ORM\Column]
@@ -32,14 +32,26 @@ class Game
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $update_at = null;
 
-    #[ORM\OneToOne(mappedBy: 'game_id', cascade: ['persist', 'remove'])]
-    private ?GameStats $gameStats = null;
-
     #[ORM\OneToMany(mappedBy: 'game_id', targetEntity: UserGame::class)]
     private Collection $userGames;
 
     #[ORM\Column(length: 255)]
     private ?string $status = null;
+
+    #[ORM\ManyToOne]
+    private ?Card $lastCard = null;
+
+    #[ORM\ManyToOne]
+    private ?User $lastUser = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $selectedColor = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $reverse = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $specialPlayed = null;
 
     public function __construct()
     {
@@ -99,28 +111,6 @@ class Game
         return $this;
     }
 
-    public function getGameStats(): ?GameStats
-    {
-        return $this->gameStats;
-    }
-
-    public function setGameStats(?GameStats $gameStats): static
-    {
-        // unset the owning side of the relation if necessary
-        if ($gameStats === null && $this->gameStats !== null) {
-            $this->gameStats->setGameId(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($gameStats !== null && $gameStats->getGameId() !== $this) {
-            $gameStats->setGameId($this);
-        }
-
-        $this->gameStats = $gameStats;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, UserGame>
      */
@@ -159,6 +149,66 @@ class Game
     public function setStatus(string $status): static
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getLastCard(): ?Card
+    {
+        return $this->lastCard;
+    }
+
+    public function setLastCard(?Card $lastCard): static
+    {
+        $this->lastCard = $lastCard;
+
+        return $this;
+    }
+
+    public function getLastUser(): ?User
+    {
+        return $this->lastUser;
+    }
+
+    public function setLastUser(?User $lastUser): static
+    {
+        $this->lastUser = $lastUser;
+
+        return $this;
+    }
+
+    public function getSelectedColor(): ?string
+    {
+        return $this->selectedColor;
+    }
+
+    public function setSelectedColor(?string $selectedColor): static
+    {
+        $this->selectedColor = $selectedColor;
+
+        return $this;
+    }
+
+    public function isReverse(): ?bool
+    {
+        return $this->reverse;
+    }
+
+    public function setReverse(?bool $reverse): static
+    {
+        $this->reverse = $reverse;
+
+        return $this;
+    }
+
+    public function isSpecialPlayed(): ?bool
+    {
+        return $this->specialPlayed;
+    }
+
+    public function setSpecialPlayed(?bool $specialPlayed): static
+    {
+        $this->specialPlayed = $specialPlayed;
 
         return $this;
     }

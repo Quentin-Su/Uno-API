@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\UserCardRepository;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserCardRepository::class)]
 class UserCard
@@ -11,12 +12,14 @@ class UserCard
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['getUserStuff'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'userCards')]
     private ?UserGame $user_game_id = null;
 
     #[ORM\ManyToOne]
+    #[Groups(['getUserStuff'])]
     private ?Card $card_id = null;
 
     #[ORM\Column]
@@ -26,6 +29,7 @@ class UserCard
     private ?\DateTimeImmutable $used_at = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['getUserStuff'])]
     private ?string $status = null;
 
     public function getId(): ?int
