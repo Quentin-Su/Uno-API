@@ -67,24 +67,24 @@ class CardController extends AbstractController
         return new JsonResponse($jsonCard, Response::HTTP_OK, [], true);
     }
 
-    #[Route('api/card/{id}', name: 'app_card.updateCard', methods: ['PUT', 'PATCH'])]
-    #[OA\RequestBody(
-        description: 'Update Card fields',
-        content: new OA\MediaType(
-            mediaType: 'application/json',
-            schema: new OA\Schema(ref: new Model(type: Card::class, groups: ['updateCard']))
-        )
-    )]
-    #[OA\Tag(name: 'Card')]
-    #[Security(name: 'Bearer')]
-    #[IsGranted('ROLE_ADMIN', message:'Unauthorized')]
-    public function updateCard(int $id, Request $request, CardRepository $repository, SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse
-    {       
-        $card = $repository->find($id);
+    // #[Route('api/card/{id}', name: 'app_card.updateCard', methods: ['PUT', 'PATCH'])]
+    // #[OA\RequestBody(
+    //     description: 'Update Card fields',
+    //     content: new OA\MediaType(
+    //         mediaType: 'application/json',
+    //         schema: new OA\Schema(ref: new Model(type: Card::class, groups: ['updateCard']))
+    //     )
+    // )]
+    // #[OA\Tag(name: 'Card')]
+    // #[Security(name: 'Bearer')]
+    // #[IsGranted('ROLE_ADMIN', message:'Unauthorized')]
+    // public function updateCard(int $id, Request $request, CardRepository $repository, SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse
+    // {       
+    //     $card = $repository->find($id);
 
-        $updateCard = $serializer->deserialize($request->getContent(), Card::class, 'json');
-        $card->setImage($updateCard->getImage() ?? $card->getImage());
+    //     $updateCard = $serializer->deserialize($request->getContent(), Card::class, 'json');
+    //     $card->setImage($updateCard->getImage() ?? $card->getImage());
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT, []);
-    }
+    //     return new JsonResponse(null, Response::HTTP_NO_CONTENT, []);
+    // }
 }
